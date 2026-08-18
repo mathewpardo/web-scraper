@@ -24,7 +24,7 @@ export function parseDocuments(html: string, pageUrl: string, page: number): Doc
       });
       const downloadHref = $(panel).find("a[href*='ServletDescarga']").attr("href");
       if (!fields.expediente || !downloadHref) return;
-      records.push({ uniquenessId: uniquenessId(`${fields.expediente}-${fields["Fecha Resolución"] ?? ""}`), scrapedAt: new Date().toISOString(), page, fields, pdfUrl: new URL(downloadHref, pageUrl).toString() });
+      records.push({ documentId: buildDocumentId(`${fields.expediente}-${fields["Fecha Resolución"] ?? ""}`), scrapedAt: new Date().toISOString(), page, fields, pdfUrl: new URL(downloadHref, pageUrl).toString() });
     });
     return dedupe(records);
   }
@@ -45,7 +45,7 @@ export function parseDocuments(html: string, pageUrl: string, page: number): Doc
     const detailUrl = absolute.find((url) => url !== pdfUrl);
     const businessKey = Object.values(fields).join("-").slice(0, 180);
     output.push({
-      uniquenessId: uniquenessId(businessKey), scrapedAt: new Date().toISOString(), page, fields, detailUrl, pdfUrl,
+      documentId: buildDocumentId(businessKey), scrapedAt: new Date().toISOString(), page, fields, detailUrl, pdfUrl,
     });
   });
   return dedupe(output);
@@ -57,11 +57,11 @@ export function extractPdfUrl(html: string, pageUrl: string): string | undefined
   return href ? new URL(href, pageUrl).toString() : undefined;
 }
 
-export function uniquenessId(value: string): string {
+export function buildDocumentId(value: string): string {
   const normalized = value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
   return `PE-PJ-${normalized || "UNKNOWN"}`.slice(0, 200);
 }
 
 function dedupe(records: DocumentRecord[]): DocumentRecord[] {
-  return [...new Map(records.map((record) => [record.uniquenessId, record])).values()];
+  return [...new Map(records.map((record) => [record.documentId, record])).values()];
 }

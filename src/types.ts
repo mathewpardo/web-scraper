@@ -10,7 +10,7 @@ export interface SearchOptions {
 }
 
 export interface DocumentRecord {
-  uniquenessId: string;
+  documentId: string;
   scrapedAt: string;
   page: number;
   fields: Record<string, Scalar>;

@@ -24,10 +24,10 @@ export class PjScraper {
       const documents = parseDocuments(current.html, current.url, page);
       if (!documents.length) throw new Error("La búsqueda no produjo filas reconocibles. Revise los selectores JSF del portal.");
       for (const document of documents) {
-        if (checkpoint.completedDocumentIds.includes(document.uniquenessId)) continue;
+        if (checkpoint.completedDocumentIds.includes(document.documentId)) continue;
         if (this.options.limit > 0 && processed >= this.options.limit) return;
         await this.processDocument(document);
-        checkpoint.completedDocumentIds.push(document.uniquenessId);
+        checkpoint.completedDocumentIds.push(document.documentId);
         await this.storage.saveCheckpoint(checkpoint);
         processed += 1;
       }
@@ -53,15 +53,15 @@ export class PjScraper {
       if (this.options.downloadPdfs && document.pdfUrl) {
         try {
           const downloaded = await withPdfRetries(() => this.http.download(document.pdfUrl!));
-          const destination = this.storage.pdfFile(document.uniquenessId);
+          const destination = this.storage.pdfFile(document.documentId);
           await writeFile(destination, downloaded.body);
           document.pdfPath = destination;
         } catch (error) {
-          await this.failure("pdf", document.uniquenessId, error);
+          await this.failure("pdf", document.documentId, error);
         }
       }
       await this.storage.appendDocument(document);
-    } catch (error) { await this.failure("document", document.uniquenessId, error); }
+    } catch (error) { await this.failure("document", document.documentId, error); }
   }
 
   private async failure(stage: FailureRecord["stage"], identifier: string, error: unknown): Promise<void> {
