@@ -72,8 +72,8 @@ export function mergePartialResponse(pageHtml: string, xml: string): string {
   const updates = response("update");
   const viewState = updates.filter((_, update) => response(update).attr("id") === "javax.faces.ViewState").first().text();
   if (viewState) page("input[name='javax.faces.ViewState']").attr("value", viewState);
-  const resultMarkup = updates.map((_, update) => response(update).text()).get().find((markup) => markup.includes("formBuscador:repeat:"));
+  const resultMarkup = updates.filter((_, update) => response(update).attr("id") === "formBuscador:panel").first().text();
   if (!resultMarkup) throw new Error("La respuesta AJAX no actualizó los resultados de búsqueda.");
-  page("#formBuscador\\:panealJur").html(resultMarkup);
+  page("#formBuscador\\:panel").replaceWith(resultMarkup);
   return page.html();
 }
